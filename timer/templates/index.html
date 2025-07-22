@@ -1,0 +1,104 @@
+{% extends "master.html" %}
+
+{% load static %}
+
+{% block title %} {{title}} {% endblock %}
+
+{% block content %}
+
+    
+        <h1>EggTimer</h1>
+        <input type="number" id="minutes" placeholder="Enter your minutes">
+        <button onclick="startTimer()">Start</button>
+        <button onclick="stopTimer()">Stop</button>
+        <br>
+        <br>
+        <div class="preset buttons">
+            <a href="{% url 'runny' %}"><button> Runny yolk 🫠 </button></a>
+            <a href="{% url 'soft' %}"><button>Soft boiled🤤</button></a>
+            <a href="{% url 'hard' %}"><button>Hard boiled😉</button></a>
+            <a href="{% url 'over'%}"><button>Over cooked😯</button></a>
+
+        </div>
+        <div id="timer">00:00</div>
+        
+    {%endblock%}
+    {%block script%}
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        
+
+        let timerInterval = null;
+        const audio = new Audio("{% static 'timer/chirps.mp3' %}"); //we put a good audio url
+
+        //unlock audio
+        document.body.addEventListener('click', function unlockAudio(){
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime =0;
+            }).catch(() => {});
+            document.body.removeEventListener('click' ,unlockAudio);
+        });
+
+        //stop and reset audio on click
+        document.body.addEventListener('click', function stopAudio() {
+            audio.pause();
+            audio.currentTime = 0;
+        });
+
+        function setTimer(minutes) {
+            document.getElementById('minutes').value = minutes;
+            startTimer()
+
+        }
+
+        function startTimer() {
+            // minutes from input
+            const minutesInput = document.getElementById('minutes').value;
+            let seconds = parseInt(minutesInput) * 60 || 0; //converting to secs,default to 0 if invalid
+
+            if (seconds <= 0) {
+                alert ('Please enter a valid number of minutes.');
+                return;
+            }
+
+            // clearing the timer of any existing minutes
+            clearInterval(timerInterval);
+
+            //timer display to be updated every second
+            timerInterval = setInterval (() => {
+                if (seconds <= 0){
+                    clearInterval(timerInterval);
+                    document.getElementById('timer').textContent= 'Your Eggs Are Ready!';
+                    document.getElementById('timer').classList.add('done');
+                    //audio.play().catch(error => console.log('Audio play failed:' ,error));
+                    if(typeof confetti === "function") {
+                        confetti({
+                            particleCount: 500,
+                            spread: 70,
+                            origin: { y : 0.6}
+
+                        });
+                    }
+                    audio.play().catch(e => console.log ('Audio play failed:' ,e));
+                    setTimeout(() => alert('Timer finished!'), 1200)
+                    return;
+                }
+
+                //calculating minutes and seconds for display
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                document.getElementById('timer').textContent = 
+                    `${minutes.toString().padStart(2 ,'0')} : ${remainingSeconds.toString() .padStart(2 ,'0')}` ;
+                seconds--;
+            } ,1000); //updates every 1000ms/ 1 sec
+        }
+
+        function stopTimer(){
+            //stop timer
+            clearInterval(timerInterval);
+            document.getElementById('timer').textContent = '00:00';
+            document.getElementById('timer').classList.remove('done');
+        }
+    </script>
+{%endblock%}

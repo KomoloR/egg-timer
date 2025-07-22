@@ -1,0 +1,54 @@
+{% extends  "master.html"%}
+
+{% load static %}
+
+
+{% block title%} {{title}} {%endblock%}
+
+{% block content %}
+    <h1>Runny 🫠Yolk</h1>
+    <p>Barely set whites,runny yolk.Good for dipping toast</p>
+    <div id="timer">00:00</div>
+    <a href="{% url 'timer' %}"> <button>Back to timer</button></a>
+{%endblock%}
+
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+    const audio = new Audio("{% static 'timer/chirps.mp3' %}");
+    
+    //unlock audio with first UI
+    document.body.addEventListener('click', function unlockAudio() {
+        audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+        }).catch(() => {});
+        document.body.removeEventListener('click', unlockAudio);
+    });
+    
+
+    let seconds = 6 * 60;
+    let timerInterval = setInterval(() =>{
+        if (seconds <= 0){
+            clearInterval(timerInterval);
+            document.getElementById('timer').textContent = 'Your Egg(s) are ready!';
+            if(typeof confetti === "function"){
+                confetti({
+                    particleCount: 500,
+                    spread: 70,
+                    origin: { y: 0.6}
+                });
+            }
+            audio.play().catch(e => console.log('Audio play failed:' ,e));
+            setTimeout(() => alert('Timer finished'), 1200);
+            return;
+        }
+
+        const mins = Math.floor (seconds/60);
+        const secs = seconds % 60;
+        document.getElementById('timer').textContent =
+          `${mins.toString().padStart(2 ,'0')} : ${secs.toString().padStart(2 ,'0')}`;
+        seconds--;
+    }, 1000);
+</script>
+{%endblock%}
